@@ -57,12 +57,16 @@ Sau khi chay lenh, Streamlit se hien thi dia chi local de mo app tren trinh duye
 ## Cau hinh Gemini API
 
 Ung dung co the dung Gemini de giai thich dap an sai sau khi lam bai kiem tra.
+Trang hoc tu vung co the dung mot Gemini API key rieng de hien thi phien am, va pinyin neu la tieng Trung.
 Dat API key bang mot trong hai cach sau.
 
 Cach 1: dung bien moi truong:
 
 ```bash
 set GEMINI_API_KEY=your_api_key_here
+set GEMINI_VOCABULARY_API_KEY=your_vocabulary_api_key_here
+set GEMINI_MODEL=gemini-2.5-flash
+set GEMINI_VOCABULARY_MODEL=gemini-2.5-flash-lite
 streamlit run app.py
 ```
 
@@ -70,9 +74,13 @@ Cach 2: tao file `.streamlit/secrets.toml`:
 
 ```toml
 GEMINI_API_KEY = "your_api_key_here"
+GEMINI_VOCABULARY_API_KEY = "your_vocabulary_api_key_here"
+GEMINI_MODEL = "gemini-2.5-flash"
+GEMINI_VOCABULARY_MODEL = "gemini-2.5-flash-lite"
 ```
 
 Sau khi nop bai, voi cau tra loi sai, bam `AI giai thich dap an sai` de Gemini giai thich.
+Khi hoc tu vung, bam `Xem phien am / pinyin` de Gemini hien thi phien am cua tu dang hoc.
 
 ## Dinh dang file JSONL
 

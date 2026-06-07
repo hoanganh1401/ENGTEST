@@ -16,6 +16,7 @@ VOCABULARY_FILES = {
     "Tu vung tieng Anh nang cao": "english_advanced.jsonl",
     "Tu vung tieng Nhat co ban": "japanese_basic.jsonl",
     "Tu vung tieng Han co ban": "korean_basic.jsonl",
+    "Tu vung tieng Trung HSK1": "tuvunghsk1.jsonl",
 }
 
 

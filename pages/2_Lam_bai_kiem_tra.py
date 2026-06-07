@@ -30,10 +30,26 @@ def get_gemini_api_key() -> str:
         return ""
 
 
+def get_gemini_model() -> str:
+    model = os.environ.get("GEMINI_MODEL", "")
+    if model:
+        return model
+
+    model = get_env_value(BASE_DIR / ".env", "GEMINI_MODEL")
+    if model:
+        return model
+
+    try:
+        return st.secrets.get("GEMINI_MODEL", "")
+    except Exception:
+        return ""
+
+
 st.set_page_config(page_title="Lam bai kiem tra")
 st.title("Lam bai kiem tra")
 
 gemini_api_key = get_gemini_api_key()
+gemini_model = get_gemini_model()
 
 quiz_file_options = get_quiz_file_options(DATA_DIR)
 selected_quiz_name = st.selectbox(
@@ -154,6 +170,7 @@ if (
                             options=detail["options"],
                             user_answer=detail["user_answer"],
                             correct_answer=detail["correct_answer"],
+                            model=gemini_model,
                         )
 
                     if ok:

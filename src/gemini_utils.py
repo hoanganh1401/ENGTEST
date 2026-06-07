@@ -1,14 +1,17 @@
 import json
+import re
 import unicodedata
 import urllib.error
 import urllib.request
 
 
-GEMINI_MODEL = "gemini-2.5-flash"
+DEFAULT_GEMINI_MODEL = "gemini-2.5-flash"
+DEFAULT_VOCABULARY_MODEL = "gemini-2.5-flash-lite"
 EXPLANATION_PROMPT_VERSION = "v3"
-GEMINI_ENDPOINT = (
+VOCABULARY_PRONUNCIATION_PROMPT_VERSION = "v3"
+GEMINI_ENDPOINT_TEMPLATE = (
     "https://generativelanguage.googleapis.com/v1beta/models/"
-    f"{GEMINI_MODEL}:generateContent"
+    "{model}:generateContent"
 )
 
 
@@ -18,6 +21,7 @@ def explain_wrong_answer(
     options: dict,
     user_answer: str,
     correct_answer: str,
+    model: str = "",
 ) -> tuple[bool, str]:
     if not api_key:
         return False, "Chua cau hinh GEMINI_API_KEY."
@@ -28,7 +32,7 @@ def explain_wrong_answer(
         user_answer=user_answer,
         correct_answer=correct_answer,
     )
-    ok, explanation = _request_explanation(api_key, prompt)
+    ok, explanation = _request_explanation(api_key, prompt, model)
     if not ok:
         return False, explanation
 
@@ -36,7 +40,7 @@ def explain_wrong_answer(
         return True, explanation
 
     retry_prompt = _build_retry_prompt(prompt, explanation)
-    ok, retry_explanation = _request_explanation(api_key, retry_prompt)
+    ok, retry_explanation = _request_explanation(api_key, retry_prompt, model)
     if not ok:
         return False, retry_explanation
 
@@ -50,7 +54,60 @@ def explain_wrong_answer(
     )
 
 
-def _request_explanation(api_key: str, prompt: str) -> tuple[bool, str]:
+def get_vocabulary_pronunciation(
+    api_key: str,
+    word: str,
+    language: str = "",
+    model: str = "",
+) -> tuple[bool, str]:
+    if not api_key:
+        return False, "Chua cau hinh GEMINI_VOCABULARY_API_KEY."
+
+    cleaned_word = word.strip()
+    if not cleaned_word:
+        return False, "Khong co tu vung de tao phien am."
+
+    prompt = _build_vocabulary_pronunciation_prompt(
+        word=cleaned_word,
+        language=language.strip(),
+    )
+    ok, pronunciation = _request_gemini_content(
+        api_key=api_key,
+        prompt=prompt,
+        temperature=0.1,
+        max_output_tokens=256,
+        empty_message="Gemini khong tra ve phien am.",
+        model=model or DEFAULT_VOCABULARY_MODEL,
+    )
+    if not ok:
+        return False, pronunciation
+
+    return True, _format_vocabulary_pronunciation(pronunciation, language)
+
+
+def _request_explanation(api_key: str, prompt: str, model: str = "") -> tuple[bool, str]:
+    return _request_gemini_content(
+        api_key=api_key,
+        prompt=prompt,
+        temperature=0.2,
+        max_output_tokens=1024,
+        empty_message="Gemini khong tra ve noi dung giai thich.",
+        model=model or DEFAULT_GEMINI_MODEL,
+    )
+
+
+def _request_gemini_content(
+    api_key: str,
+    prompt: str,
+    temperature: float,
+    max_output_tokens: int,
+    empty_message: str,
+    model: str,
+) -> tuple[bool, str]:
+    cleaned_model = _normalize_gemini_model(model)
+    if not cleaned_model:
+        return False, "Chua cau hinh model Gemini hop le."
+
     payload = {
         "contents": [
             {
@@ -62,13 +119,13 @@ def _request_explanation(api_key: str, prompt: str) -> tuple[bool, str]:
             }
         ],
         "generationConfig": {
-            "temperature": 0.2,
-            "maxOutputTokens": 1024,
+            "temperature": temperature,
+            "maxOutputTokens": max_output_tokens,
         },
     }
 
     request = urllib.request.Request(
-        GEMINI_ENDPOINT,
+        GEMINI_ENDPOINT_TEMPLATE.format(model=cleaned_model),
         data=json.dumps(payload).encode("utf-8"),
         headers={
             "Content-Type": "application/json",
@@ -88,11 +145,11 @@ def _request_explanation(api_key: str, prompt: str) -> tuple[bool, str]:
     except TimeoutError:
         return False, "Gemini API phan hoi qua lau."
 
-    explanation = _extract_text(response_data)
-    if not explanation:
-        return False, "Gemini khong tra ve noi dung giai thich."
+    content = _extract_text(response_data)
+    if not content:
+        return False, empty_message
 
-    return True, explanation
+    return True, content
 
 
 def _build_explanation_prompt(
@@ -144,6 +201,77 @@ Yeu cau:
 """.strip()
 
 
+def _normalize_gemini_model(model: str) -> str:
+    cleaned_model = model.strip()
+    if cleaned_model.startswith("models/"):
+        cleaned_model = cleaned_model.removeprefix("models/")
+
+    if not cleaned_model or any(character.isspace() for character in cleaned_model):
+        return ""
+
+    return cleaned_model
+
+
+def _build_vocabulary_pronunciation_prompt(word: str, language: str = "") -> str:
+    if "trung" in language.lower():
+        return f"""
+Nhiem vu: tao pinyin cho tu/cum tu tieng Trung.
+Nguoi hoc la nguoi Viet. Chi tra loi bang tieng Viet.
+Khong chao hoi. Khong giai thich dai dong.
+
+Tu/cum tu tieng Trung:
+{word}
+
+Hay tra loi dung mot dong theo cau truc sau:
+Pinyin: pinyin co dau thanh
+
+Yeu cau:
+- Chi viet pinyin cua chinh tu/cum tu tren.
+- Bat buoc dung dau thanh.
+- Khong them muc "Tu", "Ngon ngu", "Phien am" hay bat ky noi dung nao khac.
+""".strip()
+
+    if "anh" in language.lower():
+        return f"""
+Nhiem vu: tao phien am IPA cho tu/cum tu tieng Anh.
+Nguoi hoc la nguoi Viet. Chi tra loi bang tieng Viet.
+Khong chao hoi. Khong giai thich dai dong.
+
+Tu/cum tu tieng Anh:
+{word}
+
+Hay tra loi dung mot dong theo cau truc sau:
+Phien am IPA: /.../
+
+Yeu cau:
+- Chi viet phien am IPA cua chinh tu/cum tu tren.
+- Uu tien IPA Anh-My thong dung.
+- Khong them muc "Tu", "Ngon ngu", "Pinyin" hay bat ky noi dung nao khac.
+""".strip()
+
+    return f"""
+Nhiem vu: tao phien am cho tu/cum tu vung.
+Nguoi hoc la nguoi Viet. Chi tra loi bang tieng Viet.
+Khong chao hoi. Khong viet cau mo dau xa giao.
+
+Tu/cum tu:
+{word}
+
+Hay tra loi ngan gon dung cau truc sau:
+
+**Tu:** {word}
+**Ngon ngu:** ten ngon ngu ban nhan dien duoc
+**Phien am:** phien am IPA neu phu hop; neu khong co IPA thong dung, ghi cach doc gan dung
+**Pinyin:** neu la tieng Trung thi ghi pinyin co dau thanh; neu khong phai tieng Trung thi ghi "Khong ap dung"
+
+Yeu cau:
+- Neu la tieng Trung, bat buoc co pinyin co dau thanh.
+- Neu la tieng Anh, uu tien IPA Anh-My hoac IPA thong dung.
+- Khong giai thich dai dong.
+- Toi da 80 tu.
+""".strip()
+
+
 def _extract_text(response_data: dict) -> str:
     candidates = response_data.get("candidates", [])
     if not candidates:
@@ -155,6 +283,38 @@ def _extract_text(response_data: dict) -> str:
         for part in parts
         if part.get("text")
     ).strip()
+
+
+def _format_vocabulary_pronunciation(pronunciation: str, language: str) -> str:
+    cleaned = " ".join(pronunciation.replace("\n", " ").split())
+    normalized_language = _remove_vietnamese_marks(language.lower())
+
+    if "trung" in normalized_language:
+        pinyin = _extract_pronunciation_field(cleaned, ["Pinyin"])
+        return f"Pinyin: {pinyin}" if pinyin else cleaned
+
+    if "anh" in normalized_language:
+        ipa = _extract_pronunciation_field(
+            cleaned,
+            ["Phien am IPA", "Phien am", "IPA"],
+        )
+        return f"Phien am IPA: {ipa}" if ipa else cleaned
+
+    return cleaned
+
+
+def _extract_pronunciation_field(text: str, labels: list[str]) -> str:
+    for label in labels:
+        pattern = (
+            rf"(?:\*\*)?{re.escape(label)}(?:\*\*)?\s*:\s*"
+            r"(.+?)(?=\s*(?:\*\*)?(?:Tu|Ngon ngu|Phien am IPA|Phien am|IPA|Pinyin)"
+            r"(?:\*\*)?\s*:|$)"
+        )
+        match = re.search(pattern, text, flags=re.IGNORECASE)
+        if match:
+            return match.group(1).strip(" *")
+
+    return ""
 
 
 def _is_useful_explanation(explanation: str) -> bool:
