@@ -54,6 +54,26 @@ streamlit run app.py
 
 Sau khi chay lenh, Streamlit se hien thi dia chi local de mo app tren trinh duyet.
 
+## Cau hinh Gemini API
+
+Ung dung co the dung Gemini de giai thich dap an sai sau khi lam bai kiem tra.
+Dat API key bang mot trong hai cach sau.
+
+Cach 1: dung bien moi truong:
+
+```bash
+set GEMINI_API_KEY=your_api_key_here
+streamlit run app.py
+```
+
+Cach 2: tao file `.streamlit/secrets.toml`:
+
+```toml
+GEMINI_API_KEY = "your_api_key_here"
+```
+
+Sau khi nop bai, voi cau tra loi sai, bam `AI giai thich dap an sai` de Gemini giai thich.
+
 ## Dinh dang file JSONL
 
 File trong `data/trac_nghiem/` luu moi cau hoi tren mot dong JSON rieng biet.

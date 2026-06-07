@@ -1,7 +1,10 @@
 from pathlib import Path
+import os
 
 import streamlit as st
 
+from src.env_utils import get_env_value
+from src.gemini_utils import EXPLANATION_PROMPT_VERSION, explain_wrong_answer
 from src.quiz_engine import grade_quiz
 from src.quiz_loader import load_questions, randomize_questions
 from src.quiz_sets import get_quiz_file_options
@@ -12,8 +15,25 @@ BASE_DIR = Path(__file__).resolve().parents[1]
 DATA_DIR = BASE_DIR / "data"
 
 
+def get_gemini_api_key() -> str:
+    api_key = os.environ.get("GEMINI_API_KEY", "")
+    if api_key:
+        return api_key
+
+    api_key = get_env_value(BASE_DIR / ".env", "GEMINI_API_KEY")
+    if api_key:
+        return api_key
+
+    try:
+        return st.secrets.get("GEMINI_API_KEY", "")
+    except Exception:
+        return ""
+
+
 st.set_page_config(page_title="Lam bai kiem tra")
 st.title("Lam bai kiem tra")
+
+gemini_api_key = get_gemini_api_key()
 
 quiz_file_options = get_quiz_file_options(DATA_DIR)
 selected_quiz_name = st.selectbox(
@@ -83,8 +103,16 @@ with st.form("quiz_form"):
     submitted = st.form_submit_button("Nop bai")
 
 if submitted:
-    result = grade_quiz(questions, user_answers)
+    st.session_state.quiz_result = grade_quiz(questions, user_answers)
+    st.session_state.quiz_result_file_name = selected_quiz_file_name
+    st.session_state.quiz_result_question_count = selected_question_count
 
+if (
+    "quiz_result" in st.session_state
+    and st.session_state.get("quiz_result_file_name") == selected_quiz_file_name
+    and st.session_state.get("quiz_result_question_count") == selected_question_count
+):
+    result = st.session_state.quiz_result
     st.header("Ket qua")
     col1, col2, col3, col4 = st.columns(4)
     col1.metric("Tong so cau", result["total"])
@@ -110,3 +138,28 @@ if submitted:
             st.markdown("**Cac dap an:**")
             for key, value in detail["options"].items():
                 st.write(f"{key}. {value}")
+
+            if not detail["is_correct"]:
+                explain_key = (
+                    f"explain_{selected_quiz_file_name}_{detail['id']}_{index}"
+                )
+                explanation_state_key = (
+                    f"{explain_key}_{EXPLANATION_PROMPT_VERSION}_result"
+                )
+                if st.button("AI giai thich dap an sai", key=explain_key):
+                    with st.spinner("Gemini dang giai thich..."):
+                        ok, explanation = explain_wrong_answer(
+                            api_key=gemini_api_key,
+                            question=detail["question"],
+                            options=detail["options"],
+                            user_answer=detail["user_answer"],
+                            correct_answer=detail["correct_answer"],
+                        )
+
+                    if ok:
+                        st.session_state[explanation_state_key] = explanation
+                    else:
+                        st.warning(explanation)
+
+                if explanation_state_key in st.session_state:
+                    st.info(st.session_state[explanation_state_key])
