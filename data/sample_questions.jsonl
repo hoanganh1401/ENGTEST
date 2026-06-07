@@ -1,0 +1,5 @@
+{"id": 1, "question": "Sau gioi tu, dong tu thuong o dang nao?", "options": {"A": "V-inf", "B": "To V", "C": "V-ing", "D": "V-ed"}, "answer": "C"}
+{"id": 2, "question": "Tu nao la danh tu trong cac tu sau?", "options": {"A": "Beautiful", "B": "Quickly", "C": "Teacher", "D": "Run"}, "answer": "C"}
+{"id": 3, "question": "Thi hien tai don voi chu ngu 'he' can them gi cho dong tu thuong?", "options": {"A": "Them s/es", "B": "Them ing", "C": "Them ed", "D": "Khong them gi"}, "answer": "A"}
+{"id": 4, "question": "Thu do cua Viet Nam la thanh pho nao?", "options": {"A": "Da Nang", "B": "Ha Noi", "C": "Hue", "D": "Can Tho"}, "answer": "B"}
+{"id": 5, "question": "Trong tieng Anh, 'book' co nghia la gi?", "options": {"A": "Cay but", "B": "Quyen sach", "C": "Cai ban", "D": "Cua so"}, "answer": "B"}
