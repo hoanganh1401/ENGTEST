@@ -45,6 +45,61 @@ def get_gemini_model() -> str:
         return ""
 
 
+def render_question_details(
+    question_details: list[tuple[int, dict]],
+    selected_quiz_file_name: str,
+    gemini_api_key: str,
+    gemini_model: str,
+    view_key: str,
+) -> None:
+    if not question_details:
+        st.info("Khong co cau nao trong muc nay.")
+        return
+
+    for index, detail in question_details:
+        status = "Dung" if detail["is_correct"] else "Sai"
+        with st.expander(f"Cau {index}: {status}", expanded=True):
+            st.write(detail["question"])
+            st.write(f"Ban chon: {detail['user_answer'] or 'Chua chon'}")
+            st.write(f"Dap an dung: {detail['correct_answer']}")
+
+            if detail["is_correct"]:
+                st.success("Ban da tra loi dung.")
+            else:
+                st.error("Ban da tra loi sai.")
+
+            st.markdown("**Cac dap an:**")
+            for key, value in detail["options"].items():
+                st.write(f"{key}. {value}")
+
+            if not detail["is_correct"]:
+                explanation_key = (
+                    f"explain_{selected_quiz_file_name}_{detail['id']}_{index}"
+                )
+                explain_button_key = f"{view_key}_{explanation_key}"
+                explanation_state_key = (
+                    f"{explanation_key}_{EXPLANATION_PROMPT_VERSION}_result"
+                )
+                if st.button("AI giai thich dap an sai", key=explain_button_key):
+                    with st.spinner("Gemini dang giai thich..."):
+                        ok, explanation = explain_wrong_answer(
+                            api_key=gemini_api_key,
+                            question=detail["question"],
+                            options=detail["options"],
+                            user_answer=detail["user_answer"],
+                            correct_answer=detail["correct_answer"],
+                            model=gemini_model,
+                        )
+
+                    if ok:
+                        st.session_state[explanation_state_key] = explanation
+                    else:
+                        st.warning(explanation)
+
+                if explanation_state_key in st.session_state:
+                    st.info(st.session_state[explanation_state_key])
+
+
 st.set_page_config(page_title="Lam bai kiem tra")
 st.title("Lam bai kiem tra")
 
@@ -139,44 +194,49 @@ if (
     st.success(get_result_message(result["score"]))
 
     st.header("Chi tiet tung cau")
-    for index, detail in enumerate(result["details"], start=1):
-        status = "Dung" if detail["is_correct"] else "Sai"
-        with st.expander(f"Cau {index}: {status}", expanded=True):
-            st.write(detail["question"])
-            st.write(f"Ban chon: {detail['user_answer'] or 'Chua chon'}")
-            st.write(f"Dap an dung: {detail['correct_answer']}")
+    indexed_details = list(enumerate(result["details"], start=1))
+    correct_details = [
+        (index, detail)
+        for index, detail in indexed_details
+        if detail["is_correct"]
+    ]
+    wrong_details = [
+        (index, detail)
+        for index, detail in indexed_details
+        if not detail["is_correct"]
+    ]
 
-            if detail["is_correct"]:
-                st.success("Ban da tra loi dung.")
-            else:
-                st.error("Ban da tra loi sai.")
+    correct_tab, wrong_tab, all_tab = st.tabs(
+        [
+            f"Cau dung ({len(correct_details)})",
+            f"Cau sai ({len(wrong_details)})",
+            f"Toan bo bai kiem tra ({len(indexed_details)})",
+        ]
+    )
 
-            st.markdown("**Cac dap an:**")
-            for key, value in detail["options"].items():
-                st.write(f"{key}. {value}")
+    with correct_tab:
+        render_question_details(
+            correct_details,
+            selected_quiz_file_name,
+            gemini_api_key,
+            gemini_model,
+            "correct",
+        )
 
-            if not detail["is_correct"]:
-                explain_key = (
-                    f"explain_{selected_quiz_file_name}_{detail['id']}_{index}"
-                )
-                explanation_state_key = (
-                    f"{explain_key}_{EXPLANATION_PROMPT_VERSION}_result"
-                )
-                if st.button("AI giai thich dap an sai", key=explain_key):
-                    with st.spinner("Gemini dang giai thich..."):
-                        ok, explanation = explain_wrong_answer(
-                            api_key=gemini_api_key,
-                            question=detail["question"],
-                            options=detail["options"],
-                            user_answer=detail["user_answer"],
-                            correct_answer=detail["correct_answer"],
-                            model=gemini_model,
-                        )
+    with wrong_tab:
+        render_question_details(
+            wrong_details,
+            selected_quiz_file_name,
+            gemini_api_key,
+            gemini_model,
+            "wrong",
+        )
 
-                    if ok:
-                        st.session_state[explanation_state_key] = explanation
-                    else:
-                        st.warning(explanation)
-
-                if explanation_state_key in st.session_state:
-                    st.info(st.session_state[explanation_state_key])
+    with all_tab:
+        render_question_details(
+            indexed_details,
+            selected_quiz_file_name,
+            gemini_api_key,
+            gemini_model,
+            "all",
+        )
