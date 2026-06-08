@@ -5,10 +5,12 @@ import urllib.error
 import urllib.request
 
 
-DEFAULT_GEMINI_MODEL = "gemini-2.5-flash"
-DEFAULT_VOCABULARY_MODEL = "gemini-2.5-flash-lite"
+DEFAULT_GEMINI_MODEL = ""
+DEFAULT_VOCABULARY_MODEL = ""
+DEFAULT_SPEAKING_MODEL = ""
 EXPLANATION_PROMPT_VERSION = "v3"
 VOCABULARY_PRONUNCIATION_PROMPT_VERSION = "v3"
+SPEAKING_FEEDBACK_PROMPT_VERSION = "v1"
 GEMINI_ENDPOINT_TEMPLATE = (
     "https://generativelanguage.googleapis.com/v1beta/models/"
     "{model}:generateContent"
@@ -83,6 +85,102 @@ def get_vocabulary_pronunciation(
         return False, pronunciation
 
     return True, _format_vocabulary_pronunciation(pronunciation, language)
+
+
+def get_speaking_feedback(
+    api_key: str,
+    target_text: str,
+    transcript: str,
+    target_ipa: str,
+    spoken_ipa: str,
+    pronunciation_label: str = "IPA",
+    model: str = "",
+) -> tuple[bool, str]:
+    if not api_key:
+        return False, "Chua cau hinh GEMINI_SPEAKING_API_KEY."
+
+    if not target_text.strip():
+        return False, "Chua co tu/cau muc tieu de luyen noi."
+
+    if not transcript.strip():
+        return False, "Whisper khong nhan dien duoc noi dung ban noi."
+
+    prompt = _build_speaking_feedback_prompt(
+        target_text=target_text.strip(),
+        transcript=transcript.strip(),
+        target_ipa=target_ipa.strip(),
+        spoken_ipa=spoken_ipa.strip(),
+        pronunciation_label=pronunciation_label.strip() or "IPA",
+    )
+    return _request_gemini_content(
+        api_key=api_key,
+        prompt=prompt,
+        temperature=0.2,
+        max_output_tokens=900,
+        empty_message="Gemini khong tra ve feedback luyen noi.",
+        model=model or DEFAULT_SPEAKING_MODEL,
+    )
+
+
+def get_speaking_ipa(
+    api_key: str,
+    text: str,
+    language: str = "tieng Anh",
+    model: str = "",
+) -> tuple[bool, str]:
+    if not api_key:
+        return False, "Chua cau hinh GEMINI_SPEAKING_API_KEY."
+
+    cleaned_text = text.strip()
+    if not cleaned_text:
+        return False, "Khong co noi dung de tao IPA."
+
+    prompt = _build_speaking_ipa_prompt(cleaned_text, language)
+    ok, ipa = _request_gemini_content(
+        api_key=api_key,
+        prompt=prompt,
+        temperature=0.1,
+        max_output_tokens=160,
+        empty_message="Gemini khong tra ve IPA.",
+        model=model or DEFAULT_SPEAKING_MODEL,
+    )
+    if not ok:
+        return False, ipa
+
+    return True, _extract_pronunciation_field(
+        " ".join(ipa.replace("\n", " ").split()),
+        ["IPA", "Phien am IPA", "Phien am"],
+    ) or ipa.strip()
+
+
+def get_speaking_pinyin(
+    api_key: str,
+    text: str,
+    model: str = "",
+) -> tuple[bool, str]:
+    if not api_key:
+        return False, "Chua cau hinh GEMINI_SPEAKING_API_KEY."
+
+    cleaned_text = text.strip()
+    if not cleaned_text:
+        return False, "Khong co noi dung de tao pinyin."
+
+    prompt = _build_speaking_pinyin_prompt(cleaned_text)
+    ok, pinyin = _request_gemini_content(
+        api_key=api_key,
+        prompt=prompt,
+        temperature=0.1,
+        max_output_tokens=160,
+        empty_message="Gemini khong tra ve pinyin.",
+        model=model or DEFAULT_SPEAKING_MODEL,
+    )
+    if not ok:
+        return False, pinyin
+
+    return True, _extract_pronunciation_field(
+        " ".join(pinyin.replace("\n", " ").split()),
+        ["Pinyin"],
+    ) or pinyin.strip()
 
 
 def _request_explanation(api_key: str, prompt: str, model: str = "") -> tuple[bool, str]:
@@ -269,6 +367,84 @@ Yeu cau:
 - Neu la tieng Anh, uu tien IPA Anh-My hoac IPA thong dung.
 - Khong giai thich dai dong.
 - Toi da 80 tu.
+""".strip()
+
+
+def _build_speaking_feedback_prompt(
+    target_text: str,
+    transcript: str,
+    target_ipa: str,
+    spoken_ipa: str,
+    pronunciation_label: str,
+) -> str:
+    return f"""
+Nhiem vu: danh gia phat am tieng Anh cho nguoi hoc Viet Nam.
+Chi tra loi bang tieng Viet. Khong chao hoi. Khong viet mo dau xa giao.
+
+Tu/cau muc tieu:
+{target_text}
+
+Noi dung Whisper nghe duoc:
+{transcript}
+
+{pronunciation_label} muc tieu:
+{target_ipa or f"Khong tao duoc {pronunciation_label} muc tieu"}
+
+{pronunciation_label} tu noi dung Whisper nghe duoc:
+{spoken_ipa or f"Khong tao duoc {pronunciation_label} tu transcript"}
+
+Hay tra loi dung cau truc sau:
+
+**Muc do dung:** Cham theo 3 muc: Tot / Can sua nhe / Can luyen lai.
+
+**Ban da noi thanh:** Ghi lai transcript va noi ro co khac tu/cau muc tieu khong.
+
+**Am can chu y:** Neu {pronunciation_label} cho thay co am khac nhau, chi ra 1-3 am/cum am de luyen.
+
+**Cach sua mieng:** Huong dan ngan gon cach dat luoi, moi, hoi hoac trong am.
+
+**Luyen lai:** Dua 2 bai tap ngan, moi bai khong qua 1 dong.
+
+Yeu cau:
+- Uu tien nhan xet thuc te dua tren transcript va {pronunciation_label}.
+- Neu transcript qua khac voi muc tieu, noi ro can thu am lai cham hon.
+- Khong noi qua chac chan neu du lieu audio/IPA khong du.
+- Toi da 180 tu.
+""".strip()
+
+
+def _build_speaking_pinyin_prompt(text: str) -> str:
+    return f"""
+Nhiem vu: tao pinyin co dau thanh cho tu/cau tieng Trung.
+Chi tra loi mot dong. Khong giai thich.
+
+Noi dung:
+{text}
+
+Hay tra loi dung cau truc:
+Pinyin: ...
+
+Yeu cau:
+- Dung dau thanh, vi du: nǐ hǎo.
+- Khong them nghia, vi du hay nhan xet.
+""".strip()
+
+
+def _build_speaking_ipa_prompt(text: str, language: str) -> str:
+    return f"""
+Nhiem vu: tao phien am IPA cho tu/cau ngan.
+Chi tra loi mot dong. Khong giai thich.
+
+Ngon ngu: {language}
+Noi dung:
+{text}
+
+Hay tra loi dung cau truc:
+IPA: /.../
+
+Yeu cau:
+- Uu tien IPA Anh-My neu la tieng Anh.
+- Khong them nghia, vi du hay nhan xet.
 """.strip()
 
 

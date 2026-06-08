@@ -28,7 +28,8 @@ quiz-app/
 |-- pages/
 |   |-- 1_Them_cau_hoi.py
 |   |-- 2_Lam_bai_kiem_tra.py
-|   `-- 3_Hoc_tu_vung.py
+|   |-- 3_Hoc_tu_vung.py
+|   `-- 4_Luyen_noi.py
 |-- assets/
 |   `-- README.md
 |-- requirements.txt
@@ -58,6 +59,7 @@ Sau khi chay lenh, Streamlit se hien thi dia chi local de mo app tren trinh duye
 
 Ung dung co the dung Gemini de giai thich dap an sai sau khi lam bai kiem tra.
 Trang hoc tu vung co the dung mot Gemini API key rieng de hien thi phien am, va pinyin neu la tieng Trung.
+Trang luyen noi co the dung mot Gemini API key rieng de tao feedback phat am.
 Nut loa trong trang hoc tu vung dung Edge TTS de doc tu dang hoc, khong can API key.
 Dat API key bang mot trong hai cach sau.
 
@@ -66,8 +68,10 @@ Cach 1: dung bien moi truong:
 ```bash
 set GEMINI_API_KEY=your_api_key_here
 set GEMINI_VOCABULARY_API_KEY=your_vocabulary_api_key_here
+set GEMINI_SPEAKING_API_KEY=your_speaking_api_key_here
 set GEMINI_MODEL=gemini-2.5-flash
 set GEMINI_VOCABULARY_MODEL=gemini-2.5-flash-lite
+set GEMINI_SPEAKING_MODEL=gemini-2.5-flash-lite
 streamlit run app.py
 ```
 
@@ -76,13 +80,18 @@ Cach 2: tao file `.streamlit/secrets.toml`:
 ```toml
 GEMINI_API_KEY = "your_api_key_here"
 GEMINI_VOCABULARY_API_KEY = "your_vocabulary_api_key_here"
+GEMINI_SPEAKING_API_KEY = "your_speaking_api_key_here"
 GEMINI_MODEL = "gemini-2.5-flash"
 GEMINI_VOCABULARY_MODEL = "gemini-2.5-flash-lite"
+GEMINI_SPEAKING_MODEL = "gemini-2.5-flash-lite"
 ```
 
 Sau khi nop bai, voi cau tra loi sai, bam `AI giai thich dap an sai` de Gemini giai thich.
 Khi hoc tu vung, bam `Xem phien am / pinyin` de Gemini hien thi phien am cua tu dang hoc.
 Bam nut loa de tao va phat audio bang Edge TTS. File audio duoc cache trong `data/tts_cache/`.
+Khi luyen noi, trang `Luyen noi` dung `faster-whisper` de nghe audio, `phonemizer` de tao IPA cho tieng Anh, `pypinyin` de tao pinyin cho tieng Trung va Gemini de tao feedback.
+`phonemizer` can backend `espeak` tren may de tao IPA. Neu chua cai `espeak`, app se tu dung `GEMINI_SPEAKING_API_KEY` de tao IPA thay the.
+Neu cai `espeak` o Windows, co the dat `PHONEMIZER_ESPEAK_LIBRARY` trong `.env`, vi du `PHONEMIZER_ESPEAK_LIBRARY=C:\Program Files\eSpeak NG\libespeak-ng.dll`.
 
 ## Dinh dang file JSONL
 
@@ -165,6 +174,13 @@ Khi them cau hoi, chon bai kiem tra can luu. Khi them tu vung, chon bo tu vung c
 2. Chon bo tu vung.
 3. Chon kieu hoc: hien tieng Anh nhap nghia tieng Viet, hoac hien nghia tieng Viet nhap tieng Anh.
 4. Nhap dap an va bam `Kiem tra`.
+
+## Cach luyen noi
+
+1. Chon trang `Luyen noi` o menu ben trai.
+2. Chon bo tu vung va tu/cau muc tieu.
+3. Bam ghi am, doc tu/cau muc tieu, sau do bam `Phan tich phat am`.
+4. Ung dung se hien thi transcript tu Whisper, IPA va feedback tu Gemini.
 
 ## Ghi chu
 

@@ -1,2 +1,5 @@
 streamlit
 edge-tts
+faster-whisper
+phonemizer
+pypinyin
