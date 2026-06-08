@@ -58,6 +58,7 @@ Sau khi chay lenh, Streamlit se hien thi dia chi local de mo app tren trinh duye
 
 Ung dung co the dung Gemini de giai thich dap an sai sau khi lam bai kiem tra.
 Trang hoc tu vung co the dung mot Gemini API key rieng de hien thi phien am, va pinyin neu la tieng Trung.
+Nut loa trong trang hoc tu vung dung Edge TTS de doc tu dang hoc, khong can API key.
 Dat API key bang mot trong hai cach sau.
 
 Cach 1: dung bien moi truong:
@@ -81,6 +82,7 @@ GEMINI_VOCABULARY_MODEL = "gemini-2.5-flash-lite"
 
 Sau khi nop bai, voi cau tra loi sai, bam `AI giai thich dap an sai` de Gemini giai thich.
 Khi hoc tu vung, bam `Xem phien am / pinyin` de Gemini hien thi phien am cua tu dang hoc.
+Bam nut loa de tao va phat audio bang Edge TTS. File audio duoc cache trong `data/tts_cache/`.
 
 ## Dinh dang file JSONL
 

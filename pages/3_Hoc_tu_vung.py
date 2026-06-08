@@ -8,6 +8,12 @@ from src.gemini_utils import (
     VOCABULARY_PRONUNCIATION_PROMPT_VERSION,
     get_vocabulary_pronunciation,
 )
+from src.edge_tts_utils import (
+    create_edge_tts_audio,
+    get_audio_cache_path,
+    get_tts_language,
+    get_tts_voice,
+)
 from src.quiz_loader import randomize_questions
 from src.quiz_sets import get_vocabulary_file_options
 from src.vocabulary_utils import is_correct_vocabulary_answer, load_vocabulary
@@ -15,6 +21,7 @@ from src.vocabulary_utils import is_correct_vocabulary_answer, load_vocabulary
 
 BASE_DIR = Path(__file__).resolve().parents[1]
 DATA_DIR = BASE_DIR / "data"
+TTS_CACHE_DIR = DATA_DIR / "tts_cache"
 
 
 def get_vocabulary_gemini_api_key() -> str:
@@ -51,6 +58,10 @@ def infer_pronunciation_language(vocabulary_name: str) -> str:
     normalized_name = vocabulary_name.lower()
     if "tieng trung" in normalized_name:
         return "tieng Trung"
+    if "tieng nhat" in normalized_name:
+        return "tieng Nhat"
+    if "tieng han" in normalized_name:
+        return "tieng Han"
     if "tieng anh" in normalized_name:
         return "tieng Anh"
     return ""
@@ -119,6 +130,14 @@ else:
 st.header(prompt)
 
 pronunciation_word = current_item.get("english", "").strip()
+tts_language = get_tts_language(selected_vocabulary_name)
+tts_voice = get_tts_voice(tts_language)
+tts_audio_path = get_audio_cache_path(TTS_CACHE_DIR, pronunciation_word, tts_voice)
+tts_key = (
+    f"tts_{selected_vocabulary_file_name}_"
+    f"{current_item.get('id', st.session_state.vocabulary_index)}"
+)
+tts_state_key = f"{tts_key}_{tts_voice}_audio"
 pronunciation_key = (
     f"pronunciation_{selected_vocabulary_file_name}_"
     f"{current_item.get('id', st.session_state.vocabulary_index)}"
@@ -128,29 +147,49 @@ pronunciation_state_key = (
     f"{VOCABULARY_PRONUNCIATION_PROMPT_VERSION}_result"
 )
 
-if st.button("Xem phien am / pinyin", key=pronunciation_key):
-    with st.spinner("Gemini dang tao phien am..."):
-        try:
-            ok, pronunciation = get_vocabulary_pronunciation(
-                api_key=vocabulary_gemini_api_key,
-                word=pronunciation_word,
-                language=pronunciation_language,
-                model=vocabulary_gemini_model,
-            )
-        except TypeError:
-            ok, pronunciation = get_vocabulary_pronunciation(
-                api_key=vocabulary_gemini_api_key,
-                word=pronunciation_word,
-                language=pronunciation_language,
+pronunciation_col, tts_col = st.columns([3, 1])
+
+with pronunciation_col:
+    if st.button("Xem phien am / pinyin", key=pronunciation_key):
+        with st.spinner("Gemini dang tao phien am..."):
+            try:
+                ok, pronunciation = get_vocabulary_pronunciation(
+                    api_key=vocabulary_gemini_api_key,
+                    word=pronunciation_word,
+                    language=pronunciation_language,
+                    model=vocabulary_gemini_model,
+                )
+            except TypeError:
+                ok, pronunciation = get_vocabulary_pronunciation(
+                    api_key=vocabulary_gemini_api_key,
+                    word=pronunciation_word,
+                    language=pronunciation_language,
+                )
+
+        if ok:
+            st.session_state[pronunciation_state_key] = pronunciation
+        else:
+            st.warning(pronunciation)
+
+with tts_col:
+    if st.button("🔊", key=tts_key, help=f"Doc tu bang Edge TTS ({tts_voice})"):
+        with st.spinner("Dang tao audio..."):
+            ok, audio_result = create_edge_tts_audio(
+                pronunciation_word,
+                tts_voice,
+                tts_audio_path,
             )
 
-    if ok:
-        st.session_state[pronunciation_state_key] = pronunciation
-    else:
-        st.warning(pronunciation)
+        if ok:
+            st.session_state[tts_state_key] = audio_result
+        else:
+            st.warning(audio_result)
 
 if pronunciation_state_key in st.session_state:
     st.info(st.session_state[pronunciation_state_key])
+
+if tts_state_key in st.session_state:
+    st.audio(st.session_state[tts_state_key], format="audio/mp3")
 
 with st.form("vocabulary_practice_form"):
     user_answer = st.text_input(input_label)
