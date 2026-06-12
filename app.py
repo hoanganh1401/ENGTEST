@@ -16,7 +16,7 @@ st.title("Ung dung lam bai kiem tra trac nghiem")
 st.write(
     """
     Day la ung dung Streamlit don gian giup ban tao cau hoi trac nghiem,
-    tao bo tu vung, hoc va luyen noi truc tiep tren trinh duyet.
+    tao bo tu vung, hoc, luyen noi va dich offline truc tiep tren trinh duyet.
     """
 )
 
@@ -34,6 +34,7 @@ st.markdown(
     - Lam bai kiem tra bang radio button.
     - Hoc tu vung theo chieu Anh - Viet hoac Viet - Anh.
     - Luyen noi bang ghi am, Whisper, IPA va Gemini feedback.
+    - Dich offline bang Argos Translate khi da cai goi ngon ngu.
     - Cham diem, tinh diem thang 10 va hien thi chi tiet tung cau.
     """
 )

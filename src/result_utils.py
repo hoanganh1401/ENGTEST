@@ -4,9 +4,9 @@ def format_score(score: float) -> str:
 
 def get_result_message(score: float) -> str:
     if score >= 8:
-        return "Rat tot"
+        return "Rất tốt"
     if score >= 6.5:
-        return "Kha"
+        return "Khá"
     if score >= 5:
-        return "Trung binh"
-    return "Can on tap them"
+        return "Trung bình"
+    return "Cần ôn tập thêm"

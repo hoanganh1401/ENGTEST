@@ -53,22 +53,21 @@ def render_question_details(
     view_key: str,
 ) -> None:
     if not question_details:
-        st.info("Khong co cau nao trong muc nay.")
+        st.info("Không có câu hỏi nào.")
         return
 
     for index, detail in question_details:
-        status = "Dung" if detail["is_correct"] else "Sai"
-        with st.expander(f"Cau {index}: {status}", expanded=True):
+        status = "Đúng" if detail["is_correct"] else "Sai"
+        with st.expander(f"Câu {index}: {status}", expanded=True):
             st.write(detail["question"])
-            st.write(f"Ban chon: {detail['user_answer'] or 'Chua chon'}")
-            st.write(f"Dap an dung: {detail['correct_answer']}")
-
+            st.write(f"Bạn chọn: {detail['user_answer'] or 'Chưa chọn'}")
+            st.write(f"Đáp án đúng: {detail['correct_answer']}")
             if detail["is_correct"]:
-                st.success("Ban da tra loi dung.")
+                st.success("Bạn đã trả lời đúng.")
             else:
-                st.error("Ban da tra loi sai.")
+                st.error("Bạn đã trả lời sai.")
 
-            st.markdown("**Cac dap an:**")
+            st.markdown("**Các đáp án:**")
             for key, value in detail["options"].items():
                 st.write(f"{key}. {value}")
 
@@ -80,8 +79,8 @@ def render_question_details(
                 explanation_state_key = (
                     f"{explanation_key}_{EXPLANATION_PROMPT_VERSION}_result"
                 )
-                if st.button("AI giai thich dap an sai", key=explain_button_key):
-                    with st.spinner("Gemini dang giai thich..."):
+                if st.button("AI giải thích đáp án sai", key=explain_button_key):
+                    with st.spinner("Gemini đang giải thích..."):
                         ok, explanation = explain_wrong_answer(
                             api_key=gemini_api_key,
                             question=detail["question"],
@@ -100,22 +99,53 @@ def render_question_details(
                     st.info(st.session_state[explanation_state_key])
 
 
-st.set_page_config(page_title="Lam bai kiem tra")
-st.title("Lam bai kiem tra")
+def reset_quiz_attempt(
+    selected_quiz_file_name: str,
+    loaded_questions: list[dict],
+    selected_question_count: int,
+) -> None:
+    clear_quiz_attempt_state(selected_quiz_file_name, loaded_questions)
+    st.session_state.quiz_attempt_id = st.session_state.get("quiz_attempt_id", 0) + 1
+    st.session_state.quiz_questions = randomize_questions(loaded_questions)[
+        :selected_question_count
+    ]
+    st.session_state.quiz_result_file_name = selected_quiz_file_name
+    st.session_state.quiz_result_question_count = selected_question_count
+
+
+def clear_quiz_attempt_state(
+    selected_quiz_file_name: str,
+    loaded_questions: list[dict],
+) -> None:
+    for question in loaded_questions:
+        question_id = question.get("id")
+        st.session_state.pop(f"{selected_quiz_file_name}_question_{question_id}", None)
+
+    for state_key in list(st.session_state.keys()):
+        if (
+            state_key.startswith("quiz_result")
+            or f"explain_{selected_quiz_file_name}_" in state_key
+            or state_key.startswith(f"{selected_quiz_file_name}_attempt_")
+        ):
+            st.session_state.pop(state_key, None)
+
+
+st.set_page_config(page_title="Làm bài kiểm tra")
+st.title("Làm bài kiểm tra")
 
 gemini_api_key = get_gemini_api_key()
 gemini_model = get_gemini_model()
 
 quiz_file_options = get_quiz_file_options(DATA_DIR)
 selected_quiz_name = st.selectbox(
-    "Bai kiem tra",
+    "Bài kiểm tra",
     list(quiz_file_options.keys()),
 )
 selected_questions_file = quiz_file_options[selected_quiz_name]
 loaded_questions = load_questions(str(selected_questions_file))
 
 if not loaded_questions:
-    st.warning("Bai kiem tra nay chua co du lieu cau hoi. Hay them cau hoi truoc khi lam bai.")
+    st.warning("Bài kiểm tra này chưa có dữ liệu câu hỏi. Hãy thêm câu hỏi trước khi làm bài.")
     st.stop()
 
 QUESTION_COUNT_OPTIONS = [20, 30, 40, 50, 60, 70, 80, 90, 100]
@@ -127,19 +157,23 @@ if not available_count_options:
     available_count_options = [len(loaded_questions)]
 
 selected_question_count = st.selectbox(
-    "So luong cau hoi",
+    "Số lượng câu hỏi",
     available_count_options,
 )
 
 question_ids = tuple(question.get("id") for question in loaded_questions)
 selected_quiz_file_name = selected_questions_file.name
 
-if (
+quiz_settings_changed = (
     "quiz_question_ids" not in st.session_state
     or st.session_state.get("quiz_file_name") != selected_quiz_file_name
     or st.session_state.quiz_question_ids != question_ids
     or st.session_state.get("quiz_question_count") != selected_question_count
-):
+)
+
+if quiz_settings_changed:
+    clear_quiz_attempt_state(selected_quiz_file_name, loaded_questions)
+    st.session_state.quiz_attempt_id = st.session_state.get("quiz_attempt_id", 0) + 1
     st.session_state.quiz_file_name = selected_quiz_file_name
     st.session_state.quiz_question_ids = question_ids
     st.session_state.quiz_question_count = selected_question_count
@@ -148,6 +182,7 @@ if (
     ]
 
 questions = st.session_state.quiz_questions
+quiz_attempt_id = st.session_state.get("quiz_attempt_id", 0)
 
 with st.form("quiz_form"):
     user_answers = {}
@@ -156,7 +191,7 @@ with st.form("quiz_form"):
         question_id = question.get("id", index)
         options = question.get("options", {})
 
-        st.subheader(f"Cau {index}: {question.get('question', '')}")
+        st.subheader(f"Câu {index}: {question.get('question', '')}")
         labels = [
             f"A. {options.get('A', '')}",
             f"B. {options.get('B', '')}",
@@ -164,14 +199,17 @@ with st.form("quiz_form"):
             f"D. {options.get('D', '')}",
         ]
         selected_label = st.radio(
-            "Chon dap an",
+            "Chọn đáp án",
             labels,
-            key=f"{selected_quiz_file_name}_question_{question_id}",
+            key=(
+                f"{selected_quiz_file_name}_attempt_{quiz_attempt_id}_"
+                f"question_{question_id}"
+            ),
             index=None,
         )
         user_answers[question_id] = selected_label[0] if selected_label else ""
 
-    submitted = st.form_submit_button("Nop bai")
+    submitted = st.form_submit_button("Nộp bài")
 
 if submitted:
     st.session_state.quiz_result = grade_quiz(questions, user_answers)
@@ -184,16 +222,23 @@ if (
     and st.session_state.get("quiz_result_question_count") == selected_question_count
 ):
     result = st.session_state.quiz_result
-    st.header("Ket qua")
+    st.header("Kết quả")
     col1, col2, col3, col4 = st.columns(4)
-    col1.metric("Tong so cau", result["total"])
-    col2.metric("So cau dung", result["correct"])
-    col3.metric("So cau sai", result["wrong"])
-    col4.metric("Diem", format_score(result["score"]))
+    col1.metric("Tổng số câu", result["total"])
+    col2.metric("Số câu đúng", result["correct"])
+    col3.metric("Số câu sai", result["wrong"])
+    col4.metric("Điểm", format_score(result["score"]))
 
     st.success(get_result_message(result["score"]))
+    if st.button("Làm lại bài"):
+        reset_quiz_attempt(
+            selected_quiz_file_name,
+            loaded_questions,
+            selected_question_count,
+        )
+        st.rerun()
 
-    st.header("Chi tiet tung cau")
+    st.header("Chi tiết kết quả từng câu hỏi")
     indexed_details = list(enumerate(result["details"], start=1))
     correct_details = [
         (index, detail)
@@ -208,9 +253,9 @@ if (
 
     correct_tab, wrong_tab, all_tab = st.tabs(
         [
-            f"Cau dung ({len(correct_details)})",
-            f"Cau sai ({len(wrong_details)})",
-            f"Toan bo bai kiem tra ({len(indexed_details)})",
+            f"Câu đúng ({len(correct_details)})",
+            f"Câu sai ({len(wrong_details)})",
+            f"Toàn bộ bài kiểm tra ({len(indexed_details)})",
         ]
     )
 

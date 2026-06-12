@@ -29,7 +29,8 @@ quiz-app/
 |   |-- 1_Them_cau_hoi.py
 |   |-- 2_Lam_bai_kiem_tra.py
 |   |-- 3_Hoc_tu_vung.py
-|   `-- 4_Luyen_noi.py
+|   |-- 4_Luyen_noi.py
+|   `-- 5_Dich_offline.py
 |-- assets/
 |   `-- README.md
 |-- requirements.txt
@@ -92,6 +93,7 @@ Bam nut loa de tao va phat audio bang Edge TTS. File audio duoc cache trong `dat
 Khi luyen noi, trang `Luyen noi` dung `faster-whisper` de nghe audio, `phonemizer` de tao IPA cho tieng Anh, `pypinyin` de tao pinyin cho tieng Trung va Gemini de tao feedback.
 `phonemizer` can backend `espeak` tren may de tao IPA. Neu chua cai `espeak`, app se tu dung `GEMINI_SPEAKING_API_KEY` de tao IPA thay the.
 Neu cai `espeak` o Windows, co the dat `PHONEMIZER_ESPEAK_LIBRARY` trong `.env`, vi du `PHONEMIZER_ESPEAK_LIBRARY=C:\Program Files\eSpeak NG\libespeak-ng.dll`.
+Trang `Dich offline` dung Argos Translate. Can cai goi ngon ngu `.argosmodel` truoc; sau khi cai goi, viec dich co the chay offline. Model Argos duoc luu trong `model_argostranslate/`.
 
 ## Dinh dang file JSONL
 
@@ -181,6 +183,13 @@ Khi them cau hoi, chon bai kiem tra can luu. Khi them tu vung, chon bo tu vung c
 2. Chon bo tu vung va tu/cau muc tieu.
 3. Bam ghi am, doc tu/cau muc tieu, sau do bam `Phan tich phat am`.
 4. Ung dung se hien thi transcript tu Whisper, IPA va feedback tu Gemini.
+
+## Cach dich offline
+
+1. Chon trang `Dich offline`.
+2. Cai goi ngon ngu `.argosmodel` neu chua co.
+3. Chon ngon ngu nguon va ngon ngu dich.
+4. Nhap van ban va bam `Dich`.
 
 ## Ghi chu
 

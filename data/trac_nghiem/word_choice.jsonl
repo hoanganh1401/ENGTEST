@@ -1,0 +1,50 @@
+{"id": 1, "question": "There are ____ students in the classroom.", "options": {"A": "much", "B": "many", "C": "little", "D": "any"}, "answer": "B"}
+{"id": 2, "question": "I don’t have ____ time today.", "options": {"A": "many", "B": "much", "C": "few", "D": "some"}, "answer": "B"}
+{"id": 3, "question": "There are only ____ chairs in the room.", "options": {"A": "a few", "B": "much", "C": "little", "D": "any"}, "answer": "A"}
+{"id": 4, "question": "We have ____ money left, so we cannot buy it.", "options": {"A": "few", "B": "little", "C": "many", "D": "several"}, "answer": "B"}
+{"id": 5, "question": "Would you like ____ coffee?", "options": {"A": "any", "B": "some", "C": "many", "D": "few"}, "answer": "B"}
+{"id": 6, "question": "I don’t have ____ questions.", "options": {"A": "some", "B": "any", "C": "much", "D": "little"}, "answer": "B"}
+{"id": 7, "question": "Are there ____ books on the table?", "options": {"A": "any", "B": "some", "C": "little", "D": "much"}, "answer": "A"}
+{"id": 8, "question": "She is ____ kind that everyone likes her.", "options": {"A": "such", "B": "so", "C": "too", "D": "enough"}, "answer": "B"}
+{"id": 9, "question": "It was ____ a difficult test that many students failed.", "options": {"A": "so", "B": "such", "C": "too", "D": "enough"}, "answer": "B"}
+{"id": 10, "question": "This box is ____ heavy for me to carry.", "options": {"A": "enough", "B": "too", "C": "such", "D": "many"}, "answer": "B"}
+{"id": 11, "question": "The room is big ____ for 30 people.", "options": {"A": "too", "B": "enough", "C": "such", "D": "so"}, "answer": "B"}
+{"id": 12, "question": "We don’t have ____ chairs for everyone.", "options": {"A": "enough", "B": "too", "C": "so", "D": "such"}, "answer": "A"}
+{"id": 13, "question": "There is ____ milk in the fridge. We need to buy some.", "options": {"A": "many", "B": "few", "C": "little", "D": "a few"}, "answer": "C"}
+{"id": 14, "question": "There are ____ apples in the basket. You can take one.", "options": {"A": "a few", "B": "little", "C": "much", "D": "any"}, "answer": "A"}
+{"id": 15, "question": "I have ____ friends in this city, so I often feel lonely.", "options": {"A": "few", "B": "little", "C": "much", "D": "any"}, "answer": "A"}
+{"id": 16, "question": "I have ____ experience in marketing.", "options": {"A": "few", "B": "little", "C": "many", "D": "several"}, "answer": "B"}
+{"id": 17, "question": "There is ____ water on the floor.", "options": {"A": "many", "B": "a few", "C": "some", "D": "any"}, "answer": "C"}
+{"id": 18, "question": "She doesn’t want ____ help.", "options": {"A": "some", "B": "any", "C": "many", "D": "few"}, "answer": "B"}
+{"id": 19, "question": "There is ____ food in the kitchen.", "options": {"A": "no", "B": "none", "C": "any", "D": "few"}, "answer": "A"}
+{"id": 20, "question": "I checked the fridge, but there was ____ left.", "options": {"A": "no", "B": "none", "C": "any", "D": "some"}, "answer": "B"}
+{"id": 21, "question": "There are ____ buses after midnight.", "options": {"A": "no", "B": "none", "C": "any", "D": "much"}, "answer": "A"}
+{"id": 22, "question": "I wanted some coffee, but there was ____ in the pot.", "options": {"A": "no", "B": "none", "C": "any", "D": "many"}, "answer": "B"}
+{"id": 23, "question": "I called two hotels. They are ____ full.", "options": {"A": "both", "B": "neither", "C": "either", "D": "none"}, "answer": "A"}
+{"id": 24, "question": "____ hotel has any rooms available.", "options": {"A": "Both", "B": "Neither", "C": "Either", "D": "All"}, "answer": "B"}
+{"id": 25, "question": "You can stay at ____ hotel. Both are good.", "options": {"A": "neither", "B": "either", "C": "none", "D": "every"}, "answer": "B"}
+{"id": 26, "question": "I have two brothers. ____ of them are doctors.", "options": {"A": "Both", "B": "Neither", "C": "Either", "D": "None"}, "answer": "A"}
+{"id": 27, "question": "I asked two people, but ____ of them knew the answer.", "options": {"A": "both", "B": "neither", "C": "either", "D": "every"}, "answer": "B"}
+{"id": 28, "question": "Have you ____ been to Japan?", "options": {"A": "never", "B": "ever", "C": "yet", "D": "already"}, "answer": "B"}
+{"id": 29, "question": "This is the best movie I have ____ seen.", "options": {"A": "never", "B": "ever", "C": "yet", "D": "already"}, "answer": "B"}
+{"id": 30, "question": "I have ____ eaten sushi before.", "options": {"A": "ever", "B": "never", "C": "already", "D": "yet"}, "answer": "B"}
+{"id": 31, "question": "She has ____ traveled abroad.", "options": {"A": "ever", "B": "never", "C": "any", "D": "many"}, "answer": "B"}
+{"id": 32, "question": "____ students in my class like English.", "options": {"A": "Most", "B": "The most", "C": "Almost", "D": "Much"}, "answer": "A"}
+{"id": 33, "question": "Of all the subjects, I like English ____.", "options": {"A": "most", "B": "the most", "C": "almost", "D": "mostly"}, "answer": "B"}
+{"id": 34, "question": "____ all the workers arrived on time.", "options": {"A": "Most", "B": "The most", "C": "Almost", "D": "Much"}, "answer": "C"}
+{"id": 35, "question": "____ people need money to live.", "options": {"A": "Most", "B": "Almost", "C": "The most", "D": "Much"}, "answer": "A"}
+{"id": 36, "question": "The test was ____ easy that I finished it in ten minutes.", "options": {"A": "such", "B": "so", "C": "too", "D": "enough"}, "answer": "B"}
+{"id": 37, "question": "It was ____ an interesting book that I read it twice.", "options": {"A": "so", "B": "such", "C": "too", "D": "enough"}, "answer": "B"}
+{"id": 38, "question": "He is not old ____ to drive a car.", "options": {"A": "too", "B": "enough", "C": "so", "D": "such"}, "answer": "B"}
+{"id": 39, "question": "This coffee is ____ hot to drink.", "options": {"A": "too", "B": "enough", "C": "such", "D": "many"}, "answer": "A"}
+{"id": 40, "question": "There isn’t ____ sugar in my tea.", "options": {"A": "many", "B": "enough", "C": "few", "D": "too"}, "answer": "B"}
+{"id": 41, "question": "She has ____ books, but she doesn’t read them often.", "options": {"A": "much", "B": "many", "C": "little", "D": "any"}, "answer": "B"}
+{"id": 42, "question": "He has ____ patience with children.", "options": {"A": "many", "B": "much", "C": "few", "D": "several"}, "answer": "B"}
+{"id": 43, "question": "There were ____ people at the meeting. It was almost empty.", "options": {"A": "many", "B": "few", "C": "much", "D": "a little"}, "answer": "B"}
+{"id": 44, "question": "I need ____ information about the course.", "options": {"A": "some", "B": "many", "C": "few", "D": "an"}, "answer": "A"}
+{"id": 45, "question": "Do you have ____ information about the course?", "options": {"A": "some", "B": "any", "C": "many", "D": "few"}, "answer": "B"}
+{"id": 46, "question": "We have ____ problems to solve before Friday.", "options": {"A": "much", "B": "many", "C": "little", "D": "any"}, "answer": "B"}
+{"id": 47, "question": "We have ____ work to do before Friday.", "options": {"A": "many", "B": "much", "C": "few", "D": "several"}, "answer": "B"}
+{"id": 48, "question": "I have ____ close friends, but they are very important to me.", "options": {"A": "a few", "B": "little", "C": "much", "D": "any"}, "answer": "A"}
+{"id": 49, "question": "I have ____ free time, so I can help you.", "options": {"A": "a little", "B": "few", "C": "many", "D": "any"}, "answer": "A"}
+{"id": 50, "question": "There is ____ difference between the two answers. They are almost the same.", "options": {"A": "few", "B": "little", "C": "many", "D": "several"}, "answer": "B"}
