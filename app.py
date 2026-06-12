@@ -29,8 +29,7 @@ st.markdown(
     """
     - Them cau hoi trac nghiem gom 4 dap an A, B, C, D.
     - Them tu vung gom tu tieng Anh va nghia tieng Viet.
-    - Luu cau hoi vao `data/trac_nghiem/`.
-    - Luu tu vung vao `data/tu_vung/`.
+    - Luu cau hoi va tu vung vao MongoDB.
     - Lam bai kiem tra bang radio button.
     - Hoc tu vung theo chieu Anh - Viet hoac Viet - Anh.
     - Luyen noi bang ghi am, Whisper, IPA va Gemini feedback.

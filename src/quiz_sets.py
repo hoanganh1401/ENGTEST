@@ -1,7 +1,8 @@
 from pathlib import Path
-import json
 import re
 import unicodedata
+
+from src.mongo_utils import get_learning_sets_collection, infer_set_type
 
 
 QUIZ_FILES = {
@@ -41,18 +42,22 @@ def get_vocabulary_file_options(data_dir: Path) -> dict[str, Path]:
 
 
 def create_quiz_file_option(data_dir: Path, display_name: str) -> Path:
+    existing_options = get_quiz_file_options(data_dir)
     return _create_file_option(
         data_dir / "trac_nghiem",
         display_name,
-        existing_names=set(get_quiz_file_options(data_dir).keys()),
+        existing_names=set(existing_options.keys()),
+        existing_file_names={path.name for path in existing_options.values()},
     )
 
 
 def create_vocabulary_file_option(data_dir: Path, display_name: str) -> Path:
+    existing_options = get_vocabulary_file_options(data_dir)
     return _create_file_option(
         data_dir / "tu_vung",
         display_name,
-        existing_names=set(get_vocabulary_file_options(data_dir).keys()),
+        existing_names=set(existing_options.keys()),
+        existing_file_names={path.name for path in existing_options.values()},
     )
 
 
@@ -78,6 +83,7 @@ def _create_file_option(
     target_dir: Path,
     display_name: str,
     existing_names: set[str] | None = None,
+    existing_file_names: set[str] | None = None,
 ) -> Path:
     target_dir.mkdir(parents=True, exist_ok=True)
     cleaned_name = " ".join(display_name.strip().split())
@@ -87,49 +93,71 @@ def _create_file_option(
     if cleaned_name in (existing_names or set()):
         raise ValueError("Ten nay da ton tai.")
 
-    file_name = _build_unique_file_name(target_dir, cleaned_name)
+    file_name = _build_unique_file_name(
+        target_dir,
+        cleaned_name,
+        existing_file_names or set(),
+    )
     metadata = _load_custom_metadata(target_dir)
     metadata[cleaned_name] = file_name
     _save_custom_metadata(target_dir, metadata)
     return target_dir / file_name
 
 
-def _metadata_path(target_dir: Path) -> Path:
-    return target_dir / "_sets.json"
-
-
 def _load_custom_metadata(target_dir: Path) -> dict[str, str]:
-    path = _metadata_path(target_dir)
-    if not path.exists():
+    set_type = infer_set_type(str(target_dir / "_placeholder.jsonl"))
+    if set_type == "unknown":
         return {}
 
     try:
-        with path.open("r", encoding="utf-8") as file:
-            metadata = json.load(file)
-    except (OSError, json.JSONDecodeError):
-        return {}
-
-    if not isinstance(metadata, dict):
+        collection = get_learning_sets_collection()
+        documents = collection.find(
+            {"set_type": set_type},
+            {"_id": 0, "display_name": 1, "file_name": 1},
+        ).sort("display_name", 1)
+    except Exception:
         return {}
 
     return {
-        str(display_name): str(file_name)
-        for display_name, file_name in metadata.items()
+        str(document.get("display_name")): str(document.get("file_name"))
+        for document in documents
+        if document.get("display_name") and document.get("file_name")
     }
 
 
 def _save_custom_metadata(target_dir: Path, metadata: dict[str, str]) -> None:
-    path = _metadata_path(target_dir)
-    with path.open("w", encoding="utf-8") as file:
-        json.dump(metadata, file, ensure_ascii=False, indent=2)
+    set_type = infer_set_type(str(target_dir / "_placeholder.jsonl"))
+    if set_type == "unknown":
+        return
+
+    collection = get_learning_sets_collection()
+    for display_name, file_name in metadata.items():
+        collection.update_one(
+            {
+                "set_type": set_type,
+                "display_name": display_name,
+            },
+            {
+                "$set": {
+                    "set_type": set_type,
+                    "display_name": display_name,
+                    "file_name": file_name,
+                }
+            },
+            upsert=True,
+        )
 
 
-def _build_unique_file_name(target_dir: Path, display_name: str) -> str:
+def _build_unique_file_name(
+    target_dir: Path,
+    display_name: str,
+    existing_file_names: set[str],
+) -> str:
     base_name = _slugify(display_name) or "bo_moi"
     file_name = f"{base_name}.jsonl"
     counter = 2
 
-    while (target_dir / file_name).exists():
+    while (target_dir / file_name).exists() or file_name in existing_file_names:
         file_name = f"{base_name}_{counter}.jsonl"
         counter += 1
 

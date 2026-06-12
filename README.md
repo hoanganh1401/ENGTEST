@@ -1,22 +1,12 @@
 # Ung dung lam bai kiem tra va hoc tu vung
 
-Day la ung dung Python + Streamlit dung de them cau hoi trac nghiem, them tu vung, lam bai kiem tra va hoc tu vung tren giao dien web don gian.
+Day la ung dung Python + Streamlit dung de them cau hoi trac nghiem, them tu vung, lam bai kiem tra, hoc tu vung, luyen noi va dich offline tren giao dien web don gian.
 
 ## Cau truc thu muc
 
 ```text
 quiz-app/
 |-- app.py
-|-- data/
-|   |-- trac_nghiem/
-|   |   |-- questions.jsonl
-|   |   |-- word_forms.jsonl
-|   |   |-- tenses.jsonl
-|   |   `-- phrasal_verbs.jsonl
-|   |-- tu_vung/
-|   |   |-- english_basic.jsonl
-|   |   `-- english_advanced.jsonl
-|   `-- sample_questions.jsonl
 |-- src/
 |   |-- __init__.py
 |   |-- quiz_loader.py
@@ -56,6 +46,22 @@ streamlit run app.py
 
 Sau khi chay lenh, Streamlit se hien thi dia chi local de mo app tren trinh duyet.
 
+## Cau hinh MongoDB
+
+Ung dung luu cau hoi, bo bai kiem tra va tu vung trong MongoDB.
+Mac dinh ung dung dung:
+
+```env
+MONGODB_URI=mongodb://localhost:27017/
+MONGODB_DB=LANGUAGEDB
+```
+
+Neu muon migrate du lieu JSONL cu sang MongoDB, chay:
+
+```bash
+python scripts\migrate_jsonl_to_mongo.py
+```
+
 ## Cau hinh Gemini API
 
 Ung dung co the dung Gemini de giai thich dap an sai sau khi lam bai kiem tra.
@@ -68,6 +74,8 @@ Cach 1: dung bien moi truong:
 
 ```bash
 set GEMINI_API_KEY=your_api_key_here
+set MONGODB_URI=mongodb://localhost:27017/
+set MONGODB_DB=LANGUAGEDB
 set GEMINI_VOCABULARY_API_KEY=your_vocabulary_api_key_here
 set GEMINI_SPEAKING_API_KEY=your_speaking_api_key_here
 set GEMINI_MODEL=gemini-2.5-flash
@@ -80,6 +88,8 @@ Cach 2: tao file `.streamlit/secrets.toml`:
 
 ```toml
 GEMINI_API_KEY = "your_api_key_here"
+MONGODB_URI = "mongodb://localhost:27017/"
+MONGODB_DB = "LANGUAGEDB"
 GEMINI_VOCABULARY_API_KEY = "your_vocabulary_api_key_here"
 GEMINI_SPEAKING_API_KEY = "your_speaking_api_key_here"
 GEMINI_MODEL = "gemini-2.5-flash"
@@ -97,7 +107,7 @@ Trang `Dich offline` dung Argos Translate. Can cai goi ngon ngu `.argosmodel` tr
 
 ## Dinh dang file JSONL
 
-File trong `data/trac_nghiem/` luu moi cau hoi tren mot dong JSON rieng biet.
+Du lieu cau hoi hien duoc luu trong collection MongoDB `learning_items`.
 
 Vi du:
 
@@ -112,7 +122,7 @@ Moi cau hoi gom:
 - `options`: 4 dap an A, B, C, D
 - `answer`: dap an dung, chi nhan A, B, C hoac D
 
-File trong `data/tu_vung/` luu moi tu vung tren mot dong JSON rieng biet.
+Du lieu tu vung hien duoc luu trong collection MongoDB `learning_items`.
 
 Vi du:
 
@@ -128,8 +138,7 @@ Moi tu vung gom:
 
 ## Quan ly nhieu bai kiem tra
 
-Moi bai kiem tra duoc luu trong mot file JSONL rieng trong thu muc `data/trac_nghiem/`.
-Moi bo tu vung duoc luu trong mot file JSONL rieng trong thu muc `data/tu_vung/`.
+Moi bai kiem tra va bo tu vung duoc dinh danh bang `file_name` logic trong MongoDB.
 Danh sach bai kiem tra, bo tu vung va file tuong ung nam trong `src/quiz_sets.py`.
 
 Vi du:

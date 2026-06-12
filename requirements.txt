@@ -4,3 +4,4 @@ faster-whisper
 phonemizer
 pypinyin
 argostranslate
+pymongo
